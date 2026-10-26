@@ -11,6 +11,38 @@ HEADER_FORMAT = "<8sIIQQ"
 
 
 class RingBuffer:
+    def read_order(self):
+        self._acquire_lock()
+
+        try:
+            header = self._read_header_unlocked()
+
+            read_seq = header["read_seq"]
+            write_seq = header["write_seq"]
+
+            # Check whether the buffer is empty.
+            if read_seq == write_seq:
+                raise BufferError("Ring buffer is empty.")
+
+            # Find the oldest unread order.
+            offset = self.slot_offset(read_seq)
+
+            raw_order = self.region.memory_map[
+                offset:offset + ORDER_SIZE
+            ]
+
+            # Convert binary data back into an order tuple.
+            from order_protocol import unpack_order
+            order = unpack_order(raw_order)
+
+            # Mark the order as consumed.
+            header["read_seq"] = read_seq + 1
+            self._write_header_unlocked(header)
+
+            return order
+
+        finally:
+            self._release_lock()
     def __init__(self, path):
         self.path = path
         self.region = SharedMemoryRegion.open_existing(path)
