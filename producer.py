@@ -6,13 +6,17 @@ from ring_buffer import RingBuffer
 
 
 def produce_orders(path, count, start_id=1001):
-    if count <= 0:
-        raise ValueError("Count must be greater than zero.")
+    if count < 0:
+        raise ValueError("Count cannot be negative.")
 
     if start_id < 0:
         raise ValueError("Start ID cannot be negative.")
 
     written = 0
+
+    if count == 0:
+        print("Orders written:", written)
+        return written
 
     with RingBuffer(path) as buffer:
         for i in range(count):
@@ -26,6 +30,7 @@ def produce_orders(path, count, start_id=1001):
                     price,
                     quantity
                 )
+
             except BufferError:
                 print(
                     "Buffer is full. Stopping producer.",
@@ -47,22 +52,32 @@ def produce_orders(path, count, start_id=1001):
 
     return written
 
+def non_negative_int(value):
+    number = int(value)
+
+    if number < 0:
+        raise argparse.ArgumentTypeError(
+            "--count must be zero or greater"
+        )
+
+    return number
+
 
 def main():
     parser = argparse.ArgumentParser(
-        description="ChronosMatch shared-memory order producer"
+        description="ChronosMatch Order Producer"
     )
 
     parser.add_argument(
         "--path",
         required=True,
-        help="Path to the existing shared-memory file"
+        help="Shared memory file path"
     )
 
     parser.add_argument(
         "--count",
-        type=int,
-        default=3,
+        type=non_negative_int,
+        required=True,
         help="Number of orders to produce"
     )
 
@@ -70,7 +85,7 @@ def main():
         "--start-id",
         type=int,
         default=1001,
-        help="ID of the first order"
+        help="Starting order ID"
     )
 
     args = parser.parse_args()
@@ -81,12 +96,13 @@ def main():
             args.count,
             args.start_id
         )
-    except (ValueError, TypeError, OSError) as error:
-        print("Producer error:", error, file=sys.stderr)
+
+    except (OSError, ValueError) as error:
+        print("Producer error: {}".format(error))
         return 1
 
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
