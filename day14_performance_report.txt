@@ -1,0 +1,30 @@
+CHRONOSMATCH DAY 14
+IPC PERFORMANCE ANALYSIS REPORT
+=======================================================
+
+Successful benchmarks: 5
+Failed benchmarks: 0
+
+BENCHMARK RESULTS
+-------------------------------------------------------
+Orders       Time (sec)      Orders/sec           Status
+10000        0.398821        25073.88             PASSED
+50000        0.569904        87734.07             PASSED
+100000       0.752075        132965.50            PASSED
+250000       1.278665        195516.36            PASSED
+1000000      3.224480        310127.53            PASSED
+
+PERFORMANCE SUMMARY
+-------------------------------------------------------
+Highest throughput: 310127.53 orders/second
+Best workload: 1000000 orders
+Average throughput: 150283.47 orders/second
+Throughput growth factor: 12.37x
+
+OBSERVATIONS
+-------------------------------------------------------
+The IPC audit measures producer-consumer communication using shared memory.
+The benchmark includes process startup, synchronization, data transfer and cleanup.
+Further optimization should focus on reducing synchronization and locking overhead.
+
+End of report.
